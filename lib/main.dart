@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MaterialApp(
-    title: 'Navigation',
-    home: FirstScreen(),
-  ));
-}
+void main() => runApp(MaterialApp(
+      title: 'Navigation',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => FirstScreen(),
+        '/second': (context) => SecondScreen(),
+      },
+    ));
 
 class FirstScreen extends StatelessWidget {
   @override
@@ -17,8 +19,7 @@ class FirstScreen extends StatelessWidget {
           child: ElevatedButton(
             child: Text('次の画面を開く'),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => SecondScreen()));
+              Navigator.pushNamed(context, '/second');
             },
           ),
         ),
