@@ -1,44 +1,71 @@
 import 'package:flutter/material.dart';
 
+class Todo {
+  final String title;
+  final String description;
+
+  Todo({required this.title, required this.description})
+      : assert(title != null),
+        assert(description != null);
+}
+
 void main() => runApp(MaterialApp(
       title: 'Navigation',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => FirstScreen(),
-        '/second': (context) => SecondScreen(),
-      },
+      home: TodoScreen(
+        todos: List<Todo>.generate(
+            20,
+            (i) => Todo(
+                  title: 'TODO $i',
+                  description: 'TODO $i の詳細',
+                )),
+      ),
     ));
 
-class FirstScreen extends StatelessWidget {
+class TodoScreen extends StatelessWidget {
+  final List<Todo> _todos;
+
+  TodoScreen({Key? key, required List<Todo> todos})
+      : assert(todos != null),
+        this._todos = todos,
+        super(key: key);
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text('1番目のルート'),
+          title: Text('TODOリスト'),
         ),
-        body: Center(
-          child: ElevatedButton(
-            child: Text('次の画面を開く'),
-            onPressed: () {
-              Navigator.pushNamed(context, '/second');
-            },
-          ),
+        body: ListView.builder(
+          itemCount: _todos.length,
+          itemBuilder: (context, index) => ListTile(
+              title: Text(_todos[index].title),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailScreen(todo: _todos[index]),
+                  ),
+                );
+              }),
         ),
       );
 }
 
-class SecondScreen extends StatelessWidget {
+class DetailScreen extends StatelessWidget {
+  final Todo _todo;
+
+  DetailScreen({Key? key, required Todo todo})
+      : assert(todo != null),
+        this._todo = todo,
+        super(key: key);
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text('2番目のルート'),
+          title: Text(_todo.title),
         ),
-        body: Center(
-          child: ElevatedButton(
-            child: Text('戻る'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(_todo.description),
         ),
       );
 }
