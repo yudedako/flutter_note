@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyFirstApp());
@@ -73,12 +75,12 @@ class _PuzzlePageState extends State<PuzzlePage> {
       appBar: AppBar(title: const Text('スライドパズル'), actions: [
         // 保存したタイルの状態を読み込むボタン
         IconButton(
-          onPressed: () => {},
+          onPressed: () => loadTileNumbers(),
           icon: const Icon(Icons.play_arrow),
         ),
         // 現在のタイル状態を保存するボタン
         IconButton(
-          onPressed: () => {},
+          onPressed: () => saveTileNumbers(),
           icon: const Icon(Icons.save),
         ),
       ]),
@@ -113,15 +115,11 @@ class _PuzzlePageState extends State<PuzzlePage> {
     );
   }
 
-  // タイルが正解であるか
-  bool calcIsCorrect(List<int> numbers) {
-    final correctNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-    for (int i = 0; i < correctNumbers.length; i++) {
-      if (numbers[i] != correctNumbers[i]) {
-        return false;
-      }
-    }
-    return true;
+  // タイルをシャッフルする
+  void shuffleTiles() {
+    setState(() {
+      tileNumbers.shuffle();
+    });
   }
 
   // タプしたタイルと空白を入れ替える
@@ -135,6 +133,37 @@ class _PuzzlePageState extends State<PuzzlePage> {
         tileNumbers[indexOfEmpty] = number;
       });
     }
+  }
+
+  // 現在のタイル状態を保存する
+  void saveTileNumbers() async {
+    final value = jsonEncode(tileNumbers);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('TILE_NUMBERS', value);
+  }
+
+  // 保存したタイルの状態を読み込む
+  void loadTileNumbers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString('TILE_NUMBERS');
+    if (value != null) {
+      final numbers =
+          (jsonDecode(value) as List<dynamic>).map((v) => v as int).toList();
+      setState(() {
+        tileNumbers = numbers;
+      });
+    }
+  }
+
+  // タイルが正解であるか
+  bool calcIsCorrect(List<int> numbers) {
+    final correctNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+    for (int i = 0; i < correctNumbers.length; i++) {
+      if (numbers[i] != correctNumbers[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // タップしたタイルが空白と入れ替え可能であるか
@@ -163,13 +192,6 @@ class _PuzzlePageState extends State<PuzzlePage> {
       default:
         return false;
     }
-  }
-
-  // タイルをシャッフルする
-  void shuffleTiles() {
-    setState(() {
-      tileNumbers.shuffle();
-    });
   }
 }
 
