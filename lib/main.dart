@@ -1,71 +1,159 @@
 import 'package:flutter/material.dart';
 
-class Todo {
-  final String title;
-  final String description;
-
-  Todo({required this.title, required this.description})
-      : assert(title != null),
-        assert(description != null);
+void main() {
+  runApp(const MyFirstApp());
 }
 
-void main() => runApp(MaterialApp(
-      title: 'Navigation',
-      home: TodoScreen(
-        todos: List<Todo>.generate(
-            20,
-            (i) => Todo(
-                  title: 'TODO $i',
-                  description: 'TODO $i の詳細',
-                )),
+class MyFirstApp extends StatelessWidget {
+  const MyFirstApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'My First App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
-    ));
-
-class TodoScreen extends StatelessWidget {
-  final List<Todo> _todos;
-
-  TodoScreen({Key? key, required List<Todo> todos})
-      : assert(todos != null),
-        this._todos = todos,
-        super(key: key);
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text('TODOリスト'),
-        ),
-        body: ListView.builder(
-          itemCount: _todos.length,
-          itemBuilder: (context, index) => ListTile(
-              title: Text(_todos[index].title),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(todo: _todos[index]),
-                  ),
-                );
-              }),
-        ),
-      );
+      // スタート画面を表示
+      home: const StartPage(),
+    );
+  }
 }
 
-class DetailScreen extends StatelessWidget {
-  final Todo _todo;
-
-  DetailScreen({Key? key, required Todo todo})
-      : assert(todo != null),
-        this._todo = todo,
-        super(key: key);
+class StartPage extends StatelessWidget {
+  const StartPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(_todo.title),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'スライドパズル',
+              style: TextStyle(fontSize: 32),
+            ),
+            // 横方向に余白を作る
+            const SizedBox(height: 24),
+            ElevatedButton(
+              // スタートボタン
+              onPressed: () => showPuzzlePage(context),
+              child: const Text('スタート'),
+            ),
+          ],
         ),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(_todo.description),
+      ),
+    );
+  }
+
+  void showPuzzlePage(BuildContext context) {
+    // パズル画面へと繊維
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PuzzlePage()),
+    );
+  }
+}
+
+class PuzzlePage extends StatefulWidget {
+  const PuzzlePage({Key? key}) : super(key: key);
+
+  @override
+  _PuzzlePageState createState() => _PuzzlePageState();
+}
+
+class _PuzzlePageState extends State<PuzzlePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('スライドパズル'), actions: [
+        // 保存したタイルの状態を読み込むボタン
+        IconButton(
+          onPressed: () => {},
+          icon: const Icon(Icons.play_arrow),
         ),
-      );
+        // 現在のタイル状態を保存するボタン
+        IconButton(
+          onPressed: () => {},
+          icon: const Icon(Icons.save),
+        ),
+      ]),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                // タイル一覧
+                child: TilesView(),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              // シャッフルボタン
+              child: ElevatedButton.icon(
+                onPressed: () => {},
+                icon: const Icon(Icons.shuffle),
+                label: const Text('シャッフル'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TilesView extends StatelessWidget {
+  const TilesView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // グリッド状にWidgetを並べる
+    return GridView.count(
+      shrinkWrap: true,
+      crossAxisCount: 3,
+      crossAxisSpacing: 24,
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      children: [
+        TileView(number: 1, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 2, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 3, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 4, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 5, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 6, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 7, color: Colors.blue, onPressed: () => {}),
+        TileView(number: 8, color: Colors.blue, onPressed: () => {}),
+        Container(),
+      ],
+    );
+  }
+}
+
+class TileView extends StatelessWidget {
+  final int number;
+  final Color color;
+  final void Function() onPressed;
+
+  const TileView({
+    Key? key,
+    required this.number,
+    required this.color,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        primary: color,
+        textStyle: const TextStyle(fontSize: 32),
+      ),
+      child: Center(
+        child: Text(number.toString()),
+      ),
+    );
+  }
 }
