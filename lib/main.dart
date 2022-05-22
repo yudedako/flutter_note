@@ -92,6 +92,9 @@ class _PuzzlePageState extends State<PuzzlePage> {
                 child: TilesView(
                   // データを渡す
                   numbers: tileNumbers,
+                  isCorrect: calcIsCorrect(tileNumbers),
+                  // タップしたら入れ替える
+                  onPressed: (number) => swapTile(number),
                 ),
               ),
             ),
@@ -99,7 +102,7 @@ class _PuzzlePageState extends State<PuzzlePage> {
               width: double.infinity,
               // シャッフルボタン
               child: ElevatedButton.icon(
-                onPressed: () => {},
+                onPressed: () => shuffleTiles(),
                 icon: const Icon(Icons.shuffle),
                 label: const Text('シャッフル'),
               ),
@@ -109,14 +112,77 @@ class _PuzzlePageState extends State<PuzzlePage> {
       ),
     );
   }
+
+  // タイルが正解であるか
+  bool calcIsCorrect(List<int> numbers) {
+    final correctNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+    for (int i = 0; i < correctNumbers.length; i++) {
+      if (numbers[i] != correctNumbers[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // タプしたタイルと空白を入れ替える
+  void swapTile(int number) {
+    // タップしたタイルと空白が競り合っている場合のみ入れ替え
+    if (canSwapTile(number)) {
+      setState(() {
+        final indexOfTile = tileNumbers.indexOf(number);
+        final indexOfEmpty = tileNumbers.indexOf(0);
+        tileNumbers[indexOfTile] = 0;
+        tileNumbers[indexOfEmpty] = number;
+      });
+    }
+  }
+
+  // タップしたタイルが空白と入れ替え可能であるか
+  bool canSwapTile(int number) {
+    final indexOfTile = tileNumbers.indexOf(number);
+    final indexOfEmpty = tileNumbers.indexOf(0);
+    switch (indexOfEmpty) {
+      case 0:
+        return [1, 3].contains(indexOfTile);
+      case 1:
+        return [0, 2, 4].contains(indexOfTile);
+      case 2:
+        return [1, 5].contains(indexOfTile);
+      case 3:
+        return [0, 4, 6].contains(indexOfTile);
+      case 4:
+        return [1, 3, 5, 7].contains(indexOfTile);
+      case 5:
+        return [2, 4, 8].contains(indexOfTile);
+      case 6:
+        return [3, 7].contains(indexOfTile);
+      case 7:
+        return [4, 6, 8].contains(indexOfTile);
+      case 8:
+        return [5, 7].contains(indexOfTile);
+      default:
+        return false;
+    }
+  }
+
+  // タイルをシャッフルする
+  void shuffleTiles() {
+    setState(() {
+      tileNumbers.shuffle();
+    });
+  }
 }
 
 class TilesView extends StatelessWidget {
   final List<int> numbers;
+  final bool isCorrect;
+  final void Function(int number) onPressed;
 
   const TilesView({
     Key? key,
     required this.numbers,
+    required this.isCorrect,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
@@ -134,8 +200,8 @@ class TilesView extends StatelessWidget {
         }
         return TileView(
           number: number,
-          color: Colors.blue,
-          onPressed: () => {},
+          color: isCorrect ? Colors.green : Colors.blue,
+          onPressed: () => onPressed(number),
         );
       }).toList(),
     );
