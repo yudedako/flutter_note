@@ -1,71 +1,126 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import './poke_list_item.dart';
+import './settings.dart';
+import './models/theme_mode.dart';
+import './models/pokemon.dart';
+import './const/pokeapi.dart';
 
-class Todo {
-  final String title;
-  final String description;
-
-  Todo({required this.title, required this.description})
-      : assert(title != null),
-        assert(description != null);
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final SharedPreferences pref = await SharedPreferences.getInstance();
+  final themeModeNotifier = ThemeModeNotifier(pref);
+  final pokemonsNotifier = PokemonsNotifier();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeModeNotifier>(
+          create: (context) => themeModeNotifier,
+        ),
+        ChangeNotifierProvider<PokemonsNotifier>(
+          create: (context) => pokemonsNotifier,
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-void main() => runApp(MaterialApp(
-      title: 'Navigation',
-      home: TodoScreen(
-        todos: List<Todo>.generate(
-            20,
-            (i) => Todo(
-                  title: 'TODO $i',
-                  description: 'TODO $i の詳細',
-                )),
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeModeNotifier>(
+      builder: (context, mode, child) => MaterialApp(
+        title: 'Pokemon Flutter',
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+        themeMode: mode.mode,
+        home: const TopPage(),
       ),
-    ));
-
-class TodoScreen extends StatelessWidget {
-  final List<Todo> _todos;
-
-  TodoScreen({Key? key, required List<Todo> todos})
-      : assert(todos != null),
-        this._todos = todos,
-        super(key: key);
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text('TODOリスト'),
-        ),
-        body: ListView.builder(
-          itemCount: _todos.length,
-          itemBuilder: (context, index) => ListTile(
-              title: Text(_todos[index].title),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(todo: _todos[index]),
-                  ),
-                );
-              }),
-        ),
-      );
+    );
+  }
 }
 
-class DetailScreen extends StatelessWidget {
-  final Todo _todo;
-
-  DetailScreen({Key? key, required Todo todo})
-      : assert(todo != null),
-        this._todo = todo,
-        super(key: key);
-
+class TopPage extends StatefulWidget {
+  const TopPage({Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(_todo.title),
-        ),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(_todo.description),
-        ),
-      );
+  _TopPageState createState() => _TopPageState();
+}
+
+class _TopPageState extends State<TopPage> {
+  int currentbnb = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: currentbnb == 0 ? const PokeList() : const Settings(),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) => {
+          setState(
+            () => currentbnb = index,
+          )
+        },
+        currentIndex: currentbnb,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'settings',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PokeList extends StatefulWidget {
+  const PokeList({Key? key}) : super(key: key);
+  @override
+  _PokeListState createState() => _PokeListState();
+}
+
+class _PokeListState extends State<PokeList> {
+  static const int more = 30;
+  int pokeCount = more;
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PokemonsNotifier>(
+      builder: (context, pokes, child) => ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        itemCount: pokeCount + 1, // pokeMaxId,
+        itemBuilder: (context, index) {
+          if (index == pokeCount) {
+            return OutlinedButton(
+              child: const Text('more'),
+              onPressed: () => {
+                setState(
+                  () {
+                    pokeCount = pokeCount + more;
+                    if (pokeCount > pokeMaxId) {
+                      pokeCount = pokeMaxId;
+                    }
+                  },
+                )
+              },
+            );
+          } else {
+            return PokeListItem(
+              poke: pokes.byId(index + 1),
+            );
+          }
+        },
+      ),
+    );
+  }
 }
